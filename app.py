@@ -1,11 +1,12 @@
+import token
 from flask import Flask, jsonify, request, make_response
 from estrutura_banco_de_dados import Autor, Postagem, app, db
 import json
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
-# Rota padrão - GET https://localhost:5000
 
+# Rota padrão - GET https://localhost:5000
 
 def token_obrigatorio(f):
     @wraps(f)
@@ -15,14 +16,13 @@ def token_obrigatorio(f):
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
         if not token:
-            return jsonify({'mensagem': 'Token não foi incluído!'}, 401)
+            return jsonify({'mensagem': 'Token não foi incluído!'}), 401
         # Se temos um token, validar acesso consultando o BD
         try:
-            resultado = jwt.decode(token,app.config['SECRET_KEY'],algorithms=["HS256"])
-            autor = Autor.query.filter_by(
-                id_autor=resultado['id_autor']).first()
+            resultado = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            autor = Autor.query.filter_by(id_autor=resultado['id_autor']).first()
         except:
-            return jsonify({'mensagem': 'Token é inválido'}, 401)
+            return jsonify({'mensagem': 'Token é inválido'}), 401
         return f(autor, *args, **kwargs)
     return decorated
 
@@ -36,9 +36,8 @@ def login():
     if not usuario:
         return make_response('Login inválido', 401, {'WWW-Authenticate': 'Basic realm="Login obrigatório"'})
     if auth.password == usuario.senha:
-        token = jwt.encode({'id_autor': usuario.id_autor, 'exp': datetime.utcnow(
-        ) + timedelta(minutes=30)}, app.config['SECRET_KEY'])
-        return jsonify({'token':token})
+        token = jwt.encode({'id_autor': usuario.id_autor, 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
+        return jsonify({'token': token})
     return make_response('Login inválido', 401, {'WWW-Authenticate': 'Basic realm="Login obrigatório"'})
 
 
@@ -57,7 +56,6 @@ def obter_postagens(autor):
 
 # Obter postagem por id - GET https://localhost:5000/postagem/1
 
-
 @app.route('/postagem/<int:id_postagem>', methods=['GET'])
 @token_obrigatorio
 def obter_postagem_por_indice(autor, id_postagem):
@@ -73,13 +71,11 @@ def obter_postagem_por_indice(autor, id_postagem):
 
 # Criar uma nova postagem - POST https://localhost:5000/postagem
 
-
 @app.route('/postagem', methods=['POST'])
 @token_obrigatorio
 def nova_postagem(autor):
     nova_postagem = request.get_json()
-    postagem = Postagem(
-        titulo=nova_postagem['titulo'], id_autor=nova_postagem['id_autor'])
+    postagem = Postagem(titulo=nova_postagem['titulo'], id_autor=nova_postagem['id_autor'])
 
     db.session.add(postagem)
     db.session.commit()
@@ -87,7 +83,6 @@ def nova_postagem(autor):
     return jsonify({'mensagem': 'Postagem criada com sucesso'})
 
 # Alterar uma postagem existente - PUT https://localhost:5000/postagem/1
-
 
 @app.route('/postagem/<int:id_postagem>', methods=['PUT'])
 @token_obrigatorio
@@ -104,16 +99,14 @@ def alterar_postagem(autor, id_postagem):
         pass
 
     db.session.commit()
-    return jsonify({'mensagem': 'Postagem alterada com sucessso'})
+    return jsonify({'mensagem': 'Postagem alterada com sucesso'})
 
 # Excluir uma postagem - DELETE - https://localhost:5000/postagem/1
-
 
 @app.route('/postagem/<int:id_postagem>', methods=['DELETE'])
 @token_obrigatorio
 def excluir_postagem(autor, id_postagem):
-    postagem_a_ser_excluida = Postagem.query.filter_by(
-        id_postagem=id_postagem).first()
+    postagem_a_ser_excluida = Postagem.query.filter_by(id_postagem=id_postagem).first()
     if not postagem_a_ser_excluida:
         return jsonify({'mensagem': 'Não foi encontrado uma postagem com este id'})
     db.session.delete(postagem_a_ser_excluida)
@@ -152,14 +145,12 @@ def obter_autor_por_id(autor, id_autor):
 
 # Criar novo autor
 
-
 @app.route('/autores', methods=['POST'])
 @token_obrigatorio
 def novo_autor(autor):
     print('deu merda')
     novo_autor = request.get_json()
-    autor = Autor(
-        nome=novo_autor['nome'], senha=novo_autor['senha'], email=novo_autor['email'])
+    autor = Autor(nome=novo_autor['nome'], senha=novo_autor['senha'], email=novo_autor['email'])
 
     db.session.add(autor)
     db.session.commit()
@@ -203,5 +194,5 @@ def excluir_autor(autor, id_autor):
     return jsonify({'mensagem': 'Autor excluído com sucesso!'})
 
 
-app.run(port=5000, host='localhost', debug=True)
-
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080, debug=False)
