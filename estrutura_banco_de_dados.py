@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 # Criar um instância de SQLAlchemy
 app.config['SECRET_KEY'] = 'FSD2323f#$!SAH'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres.omnjeofxauldbpjvvapf:yirCMxAotDzGPz9u@aws-0-us-west-1.pooler.supabase.com:5432/postgres'
 
 db = SQLAlchemy(app)
 db: SQLAlchemy
@@ -34,12 +34,12 @@ class Autor(db.Model):
 def inicializar_banco():
     # Executar o comando para criar o banco de dados
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        # Criar usuários adminstradores 
-        autor = Autor(nome='jhonatan', email='jhonatan@email.com',senha='123456', admin=True)
-        db.session.add(autor)
-        db.session.commit()
+            db.drop_all()
+            db.create_all()
+            # Criar usuários adminstradores 
+            autor = Autor(nome='jhonatan', email='jhonatan@email.com',senha='123456', admin=True)
+            db.session.add(autor)
+            db.session.commit()
 
 
 if __name__ == "__main__":
